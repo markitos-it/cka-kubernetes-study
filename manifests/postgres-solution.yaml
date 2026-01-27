@@ -1,0 +1,96 @@
+#
+# kubectl exec -it postgres-0 -- psql -U admin_user -d mi_base_datos -c "\dt"
+# kubectl delete pod postgres-0
+# kubectl exec -it postgres-0 -- psql -U admin_user -d mi_base_datos -c "SELECT * FROM persistencia;"
+
+# =========================================================
+# PARTE 0: PersistentVolume (El disco físico)
+# =========================================================
+# Creamos el recurso que el StatefulSet está intentando pedir.
+# pero deberia estar fuera en un archivo separado. Por simplicidad
+# lo dejamos aquí mismo.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-pv
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  # Importante: Retain evita que el disco se borre si borras el StatefulSet
+  persistentVolumeReclaimPolicy: Retain 
+  hostPath:
+    path: "/mnt/data/postgres" # Carpeta real en el nodo donde se guardarán los bytes
+---
+# =========================================================
+# PARTE 1: Secret (Credenciales)
+# =========================================================
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+type: Opaque
+stringData:
+  postgres-password: "MiPasswordSuperSeguro123"
+---
+# =========================================================
+# PARTE 2: Service (Acceso Interno)
+# =========================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-db
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app: postgres
+---
+# =========================================================
+# PARTE 3: StatefulSet (El Motor)
+# =========================================================
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+spec:
+  serviceName: "postgres-db"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:17-alpine
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: "mi_base_datos"
+        - name: POSTGRES_USER
+          value: "admin_user"
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: postgres-password
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql/data
+  
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 5Gi

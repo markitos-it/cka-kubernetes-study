@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: markitos-it-ns-deployment
+  labels:
+    app: markitos-it
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: markitos-it
+      role: pod
+  template:
+    metadata:
+      labels:
+        app: markitos-it
+        role: pod
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: titan2
+      containers:
+        - name: markitos-it-ns-pods
+          image: nginx:latest

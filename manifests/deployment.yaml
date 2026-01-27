@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: markitos-it-deployment
+  labels:
+    name: markitos-it-deployment
+    environment: production
+    role: backend-server
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: markitos-it-deployment-pods
+      env: production
+      team: team-a
+  template:
+    metadata:
+      labels:
+        app: markitos-it-deployment-pods
+        env: production
+        team: team-a
+    spec:
+      initContainers:
+      - name: init-html
+        image: busybox:1.36
+        command: ['sh', '-c', 'echo "OK DESDE $(hostname)" > /usr/share/nginx/html/index.html']
+        volumeMounts:
+        - name: html
+          mountPath: /usr/share/nginx/html
+      containers:
+      - name: markitos-it-deployment-container
+        image: nginx:1.27.3
+        ports:
+        - name: web
+          containerPort:  80
+          protocol: TCP
+        volumeMounts:
+        - name: html
+          mountPath: /usr/share/nginx/html
+        resources:
+          requests:
+            memory: "50Mi"
+            cpu: "50m"
+      volumes:
+      - name: html
+        emptyDir: {}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: markitos-it-deployment-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: markitos-it-deployment
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50

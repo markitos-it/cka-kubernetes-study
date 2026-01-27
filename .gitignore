@@ -1,0 +1,5 @@
+nogit
+
+# Generated credentials from scripts/create-user.sh
+*-key.pem
+*-cert.pem
