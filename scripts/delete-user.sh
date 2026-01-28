@@ -56,7 +56,7 @@ fi
 # Delete certificate and key files
 echo "📁 Deleting local files..."
 FILES_DELETED=0
-for file in ${USERNAME}-key.pem ${USERNAME}-cert.pem ${USERNAME}.csr; do
+for file in certs/${USERNAME}-key.pem certs/${USERNAME}-cert.pem certs/${USERNAME}.csr; do
     if [ -f "$file" ]; then
         rm "$file"
         echo "   ✅ Deleted $file"
