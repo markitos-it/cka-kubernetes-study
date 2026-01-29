@@ -163,7 +163,7 @@ sudo systemctl start qemu-guest-agent
 -------------------------------------------------------------------------------
 4. INICIALIZACION (SOLO MASTER 1)
 -------------------------------------------------------------------------------
-sudo kubeadm init --pod-network-cidr=10.10.0.0/16 --control-plane-endpoint="masterx:6443" --upload-certs
+sudo kubeadm init --pod-network-cidr=10.10.0.0/16 --control-plane-endpoint="master1:6443" --upload-certs
 echo "Cluster inicializado. Ejecuta los comandos de join en los otros nodos."
 
 # Configuracion de kubectl para el usuario no root

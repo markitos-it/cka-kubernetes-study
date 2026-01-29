@@ -5,7 +5,7 @@ metadata:
   namespace: default
 subjects:
 - kind: User
-  name: markitos
+  name: system:serviceaccount:default:pod-reader-sa
   apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: Role
